@@ -25,6 +25,15 @@ Hive相关属性配置设置及查看问题，像Hive的配置默认是conf目�
 ![1556370582093](assets/1556370582093.png)
 
 
+### Hive架构
+- 用户接口层：像cli命令行shell环境、Thrift Server让用户可以使用多种不同语言来操作Hive，像JDBC/ODBC、HWI图形化界面
+- MetaStore：元数据存储服务，Hive和MySQL(或Derby)之间通过MetaStore服务交互
+- Driver：包含解释器、编译器、优化器、执行器
+    - 解释器负责词法、语法、语义的分析和中间代码的生成，将hql语句转成抽象语法树
+    - 编译器是把语法树编译成逻辑执行计划
+    - 逻辑层优化器对逻辑执行计划进行优化，多是减少MR的作业数量、shuffle数据量
+    - 物理层优化器进行MR任务的变换，最终生成相应的物理执行计划
+    - 执行器调用底层执行引擎执行相应物理执行计划
 
 ### 执行引擎
 
@@ -43,31 +52,11 @@ metastore这是一个单独运行的进程，可以远程，默认是和Hive运�
 
 
 ```sql
-CREATE [TEMPORARY] [EXTERNAL] TABLE [IF NOT EXISTS] [db_name.]table_name    -- (Note: TEMPORARY available in Hive 0.14.0 and later)
-  [(col_name data_type [COMMENT col_comment], ... [constraint_specification])]
-  [COMMENT table_comment]
 
-  [SKEWED BY (col_name, col_name, ...)                  -- (Note: Available in Hive 0.10.0 and later)]
-     ON ((col_value, col_value, ...), (col_value, col_value, ...), ...)
-     [STORED AS DIRECTORIES]
-  [
-   [ROW FORMAT row_format] 
-   [STORED AS file_format]
-     | STORED BY 'storage.handler.class.name' [WITH SERDEPROPERTIES (...)]  -- (Note: Available in Hive 0.6.0 and later)
-  ]
-  [LOCATION hdfs_path]
-  [TBLPROPERTIES (property_name=property_value, ...)]   -- (Note: Available in Hive 0.6.0 and later)
-  [AS select_statement];   -- (Note: Available in Hive 0.5.0 and later; not supported for external tables)
- 
 CREATE [TEMPORARY] [EXTERNAL] TABLE [IF NOT EXISTS] [db_name.]table_name
   LIKE existing_table_or_view_name
   [LOCATION hdfs_path];
 
- 
- 
-constraint_specification:
-  : [, PRIMARY KEY (col_name, ...) DISABLE NOVALIDATE ]
-    [, CONSTRAINT constraint_name FOREIGN KEY (col_name, ...) REFERENCES table_name(col_name, ...) DISABLE NOVALIDATE 
 ```
 
 
@@ -85,12 +74,16 @@ map keys termianted by 'char'	//map中k-v用char分隔
 lines terminated by 'char'	//行用char分隔
 NULL defined as 'char'	//空缺值用char代替
 
-partitioned by (col_name data_type)
+partitioned by (col_name data_type) //分区
 clustered by (col_name1, col_nam2e, ...) [sorted by(col_name [ASC|DESC], ...)] into nums buckets	//分成nums个桶，sorted by是按指定的字段生产排序桶
 
 stored as file_format	//表存储为什么格式
+location hdfs_path      //指定仓库位置，一般是用在外部表中
+[TBLPROPERTIES (property_name=property_value, ...)]
 ;
 ```
+不支持主键`primary key`和外键`foreign key`
+
 `col_type`，这里的字段类型除了sql中那些基本类型，像int、string，还有定义array_type(包含同一类型的数组)、map_type(存K-V类型数据)、struct_type(像结构体一样可以存不同类型数据)、union_type(是从指定的几种type中符合其中一种类型即可)。用法：
 
 ```
@@ -166,7 +159,7 @@ load是移动数据的操作，只是文件的移动或重命名，速度快，i
 
   - 分区中定义的列（字段）是表中正式定义的列，叫做**分区列**，但只作为目录名不是存于数据文件中
 
-  - 桶是将分区加上额外结构组织起来的，为的是**获得更高的查询效率**。像map Join就可以连接两个在相同列上划分了桶的表（两张表的桶数成整数倍或因子）。其次，**分桶便于抽样**，可以抽取部分数据试运行
+  - 桶是将表或分区加上额外结构组织起来的（具体说就是把表和分区的进一步划分，将数据按照分桶字段的hash值散列成多个文件），为的是**获得更高的查询效率**。像map Join就可以连接两个在相同列上划分了桶的表（两张表的桶数成整数倍或因子）。其次，**分桶便于抽样**，可以抽取部分数据试运行
 
   - 分桶在建表时指定要分桶的列和桶的个数，`clustered by(age) into 3 buckets`，Hive在存数据时也是根据对值的hash并对桶数取余插入对应桶中的
 
@@ -184,4 +177,17 @@ load是移动数据的操作，只是文件的移动或重命名，速度快，i
     - 分桶表后面可以不带on 字段名，不带时默认的是按分桶字段,也可以带，而没有分桶的表则必须带
     - 按分桶字段取样时，因为分桶表是直接去对应的桶中拿数据，在表比较大时会提高取样效率
 
-这里说下，分区最终可以看到目录，分桶而是文件
+这里说下，分区最终可以看到对应分区名的目录，分桶而是文件
+
+删除分区，`alter table table_ptn drop partition (col='xxx');`
+
+添加分区，`alter table table_ptn add partition (col=''xxx) location 'xxxx/xxxx';`
+
+修改分区，`alter table table_ptn partition (col='xxx') set location 'xxxx/xxxx';`（分区指向新的位置）
+
+- 其余常用DDL
+    - 修改表名，`alter table old_name rename to new_name;`
+    - 增加字段，`alter table table_name add columns (col col_type);`//和表中定义字段一样
+    - 修改字段，`alter table table_name change col new_colName new_type;`
+    - 删除字段，没有直接drop的方法，而是通过replace保留表的某些字段来达到删除字段的效果，`alter table table_name replace columns (col1 col_type,col2 col_type);`（假设原有col1、col2、col3）
+    - 删除表和清空表，和SQL一样`drop table table_name;`和`truncate table table_name;`
