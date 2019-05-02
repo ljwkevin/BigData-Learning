@@ -134,12 +134,19 @@ create table p(
 >- parquet：我最先是在spark学习时接触了这种存储格式
 
 - 内部表和外部表
-  - 内部表是把数据存储在仓库目录中，外部表（External）可以在建表时通过location指定仓库目录以外的位置存储数据
-  - 外部表在定义时不会检测location指定的位置是否存在，删除表时也只是删除表结构不会删除实际数据
+  - 内部表(Managed table)和外部表（External table），默认是把数据存储在仓库目录中（`hive.metastore.warehouse.dir`），但也可以在建表时通过location指定仓库目录以外的位置存储数据
+    - 建好表后也可以更改location位置，`alter table table_name set location 'xxx'`
+  - 内部表的数据和元数据都由hive管理，所以删除时会一起删了
+  - 外部表在定义时不会检测location指定的位置是否存在，只有元数据由Hive管理，所以删除表时也只是删除表结构不会删除实际数据
+  - 外部表在建表时要带上External
 
 load是移动数据的操作，只是文件的移动或重命名，速度快，insert是插入由MR作业完成。还有就是Hive在数据加载时不会检查文件中数据格式是否符合表中申明的模式，只有查询时会检查，不匹配的话会返回空 Null
 
-
+- 加载数据
+    - insert，会起MapReduce不推荐
+    - load：`load data [local] inpath 'xxx' [overwrite] into table table_name;`
+        - 不加local，则inpath是hdfs上的目录下的文件，加了是本地目录下的文件
+        - 加overwrite是覆盖元数据，不加会另外再copy一份数据而不覆盖
 
 - 分区和分桶
 
@@ -186,8 +193,27 @@ load是移动数据的操作，只是文件的移动或重命名，速度快，i
 修改分区，`alter table table_ptn partition (col='xxx') set location 'xxxx/xxxx';`（分区指向新的位置）
 
 - 其余常用DDL
+    - 另外创建表的方式：`create table t2 like t1;`（只复制t1表结构）和`create table t3 as select col1,col2 from t1;`（复制t1表结构和数据col1、col2）
     - 修改表名，`alter table old_name rename to new_name;`
     - 增加字段，`alter table table_name add columns (col col_type);`//和表中定义字段一样
     - 修改字段，`alter table table_name change col new_colName new_type;`
     - 删除字段，没有直接drop的方法，而是通过replace保留表的某些字段来达到删除字段的效果，`alter table table_name replace columns (col1 col_type,col2 col_type);`（假设原有col1、col2、col3）
     - 删除表和清空表，和SQL一样`drop table table_name;`和`truncate table table_name;`
+
+### DML
+- 常用DML
+    - `describe formatted table_name;`，查看表结构详细信息
+    - `show create table table_name;`，查看建表语句，它还会显示用到的类，如图
+        ![](assets/20190502210536.png)
+    - `show databases;`
+    - `show tables`，`show tables in dbname`，查看database中有哪些表，`show tables like ‘abc*’`(like后面是tablename的正则式)
+
+- 内置函数
+- UDF（自定义函数）
+- 分析窗口函数使用
+
+读[hive窗口函数进阶指南](https://mp.weixin.qq.com/s/JIJCtl63eGld5dhu3s-jZw)
+[Hive（六）内置函数与高级操作](https://www.cnblogs.com/frankdeng/p/9139347.html)
+[Hive（七）Hive分析窗口函数](https://www.cnblogs.com/frankdeng/p/9139366.html)
+
+[笔记：新手的Hive指南](https://blog.csdn.net/mrlevo520/article/details/74906302)
