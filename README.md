@@ -26,6 +26,8 @@
 
 ## Hive篇
 
+- [Hive回顾篇](https://github.com/josonle/BigData-Learning/blob/master/Hive/Hive%E5%9B%9E%E9%A1%BE.md）
+- [Hive面试该准备些什么?](https://github.com/josonle/BigData-Learning/blob/master/Hive/Hive%E9%9D%A2%E8%AF%95%E8%AF%A5%E5%87%86%E5%A4%87%E4%BA%9B%E5%95%A5%EF%BC%9F.md)
 
 ## HBase篇
 - HBase入门————[《HBase不睡觉》](http://kittyandpuppy.coolplayer.net/HBase.pdf)
