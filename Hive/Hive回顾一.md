@@ -1,4 +1,4 @@
-### 参考
+### 考
 
 - [<https://hive.apache.org/>](https://hive.apache.org/)
 

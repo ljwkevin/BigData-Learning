@@ -10,7 +10,16 @@
     - [apache kafka技术分享系列(目录索引)](https://blog.csdn.net/lizhitao/article/details/39499283)
     - [Kafka文档](http://kafka.apachecn.org)
 
-## Zookeeper篇
+## ZooKeeper篇
+
+### 资源
+
+- 尚硅谷的视频，B站有
+- 博客系列
+  - [ZooKeeper从入门到专家](https://blog.csdn.net/wo541075754/column/info/14599)
+  - [跟着实例学习ZooKeeper的用法](https://colobu.com/2014/12/16/zookeeper-recipes-by-example-summary/)
+  - [ZooKeeper八期学习-博客园-Sunddenly(⊙_⊙)](https://www.cnblogs.com/sunddenly/category/620563.html)
+  - 找到的[ZooKeeper教程资源收集（简介/原理/示例/解决方案）](http://www.cnblogs.com/EasonJim/p/7481825.html)
 
 ## Hadoop篇
 
@@ -26,7 +35,7 @@
 
 ## Hive篇
 
-- [Hive回顾篇](https://github.com/josonle/BigData-Learning/blob/master/Hive/Hive%E5%9B%9E%E9%A1%BE.md）
+- [Hive回顾篇](https://github.com/josonle/BigData-Learning/blob/master/Hive/Hive%E5%9B%9E%E9%A1%BE.md)
 - [Hive面试该准备些什么?](https://github.com/josonle/BigData-Learning/blob/master/Hive/Hive%E9%9D%A2%E8%AF%95%E8%AF%A5%E5%87%86%E5%A4%87%E4%BA%9B%E5%95%A5%EF%BC%9F.md)
 
 ## HBase篇
